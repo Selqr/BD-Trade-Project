@@ -21,6 +21,7 @@ db.goodsGroup = require("./goods-group.model.js")(sequelize, Sequelize);
 db.goods = require("./goods.model.js")(sequelize, Sequelize);
 db.priceList = require("./pricelist.model.js")(sequelize, Sequelize);
 db.priceListGoods = require("./pricelistgoods.model.js")(sequelize, Sequelize);
+db.purchase = require("./purchase.model.js")(sequelize, Sequelize);
 
 require("./references.model.js")(db);
 

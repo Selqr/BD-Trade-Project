@@ -22,4 +22,9 @@ module.exports = (db) => {
     otherKey: 'price_list_id',
     as: 'price_lists'
   });
+
+    db.purchase.belongsTo(db.priceList, {
+    foreignKey: 'price_list_id',
+    as: 'price_list'
+  });
 };
