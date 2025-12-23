@@ -2,9 +2,7 @@ const db = require("../models");
 const GoodsGroup = db.goodsGroup;
 const Op = db.Sequelize.Op;
 
-// Создание новой группы товаров
 exports.create = (req, res) => {
-  // Валидация запроса
   if (!req.body.name) {
     return res.status(400).send({
       message: "Название группы не может быть пустым!"
@@ -17,7 +15,6 @@ exports.create = (req, res) => {
     });
   }
 
-  // Создание объекта группы товаров
   const goodsGroup = {
     name: req.body.name,
     code: req.body.code,
@@ -25,7 +22,6 @@ exports.create = (req, res) => {
     category_type: req.body.category_type
   };
 
-  // Сохранение в базе данных
   GoodsGroup.create(goodsGroup)
     .then(data => {
       res.send(data);
@@ -37,7 +33,6 @@ exports.create = (req, res) => {
     });
 };
 
-// Получение всех групп товаров
 exports.findAll = (req, res) => {
   const name = req.query.name;
   let condition = name ? { name: { [Op.iLike]: `%${name}%` } } : null;
@@ -56,7 +51,6 @@ exports.findAll = (req, res) => {
     });
 };
 
-// Получение одной группы товаров по ID
 exports.findOne = (req, res) => {
   const id = req.params.id;
 
@@ -77,7 +71,6 @@ exports.findOne = (req, res) => {
     });
 };
 
-// Обновление группы товаров по ID
 exports.update = (req, res) => {
   const id = req.params.id;
 
@@ -102,7 +95,6 @@ exports.update = (req, res) => {
     });
 };
 
-// Удаление группы товаров по ID
 exports.delete = (req, res) => {
   const id = req.params.id;
 
@@ -127,7 +119,6 @@ exports.delete = (req, res) => {
     });
 };
 
-// Удаление всех групп товаров
 exports.deleteAll = (req, res) => {
   GoodsGroup.destroy({
     where: {},
