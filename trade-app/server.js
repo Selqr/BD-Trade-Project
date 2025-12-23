@@ -12,45 +12,27 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Простой маршрут
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to trade-app application." });
+  res.json({ message: "Welcome to Auto Parts Shop API" });
 });
 
+// Подключение к базе данных
 const db = require("./app/models");
-
-db.sequelize.sync({ force: true })
+db.sequelize.sync()
   .then(() => {
-    console.log("Database tables dropped and re-created.");
-    return createTestData(db);
-  })
-  .then(() => {
-    console.log("Test data created successfully.");
+    console.log("Database synced successfully.");
   })
   .catch((err) => {
-    console.log("Database error: " + err.message);
+    console.log("Failed to sync db: " + err.message);
   });
 
-async function createTestData(db) {
-  try {
-    const group1 = await db.goodsGroup.create({
-      name: "Электроника",
-      code: "ELEC",
-      description: "Электронные товары"
-    });
-    
-    const group2 = await db.goodsGroup.create({
-      name: "Запчасти",
-      code: "PARTS",
-      description: "Автозапчасти"
-    });
-    
-    console.log("Created goods groups:", group1.id, group2.id);
-  } catch (error) {
-    console.error("Error creating test data:", error.message);
-  }
-}
+// Подключаем маршруты
+require("./app/routes/goodsgroup.routes.js")(app);
 
-const PORT = process.env.NODE_DOCKER_PORT || 8080;
+// Установка порта
+const PORT = process.env.NODE_DOCKER_PORT || 8081;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
+  console.log(`API available at http://localhost:${PORT}/api/goodsgroups`);
 });
