@@ -5,6 +5,10 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
   dialect: dbConfig.dialect,
   port: dbConfig.port,
+  define: {
+    underscored: true,  
+    timestamps: true   
+  },
   pool: {
     max: dbConfig.pool.max,
     min: dbConfig.pool.min,
@@ -12,6 +16,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
     idle: dbConfig.pool.idle
   }
 });
+
 
 const db = {};
 db.Sequelize = Sequelize;

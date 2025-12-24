@@ -19,7 +19,7 @@ module.exports = app => {
 
   // Удаление всех групп товаров
   router.delete("/", goodsGroup.deleteAll);
-
+  
   // Префикс для всех маршрутов
   app.use("/api/goodsgroups", router);
 };

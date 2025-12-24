@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
 
 // Подключение к базе данных
 const db = require("./app/models");
-db.sequelize.sync()
+db.sequelize.sync({ force: true })
   .then(() => {
     console.log("Database synced successfully.");
   })
@@ -29,9 +29,10 @@ db.sequelize.sync()
 
 // Подключаем маршруты
 require("./app/routes/goodsgroup.routes.js")(app);
+require("./app/routes/goods.routes.js")(app); 
 
 // Установка порта
-const PORT = process.env.NODE_DOCKER_PORT || 8081;
+const PORT = process.env.NODE_DOCKER_PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
   console.log(`API available at http://localhost:${PORT}/api/goodsgroups`);
