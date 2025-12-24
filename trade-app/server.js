@@ -1,39 +1,71 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsdoc = require("swagger-jsdoc");
 
 const app = express();
 
-var corsOptions = {
-  origin: "http://localhost:8081"
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "AutoParts Trade API",
+      version: "1.0.0",
+      description: "API для магазина автозапчастей"
+    },
+    servers: [
+      {
+        url: "http://localhost:8080",
+        description: "Development server"
+      }
+    ],
+    tags: [
+      {
+        name: "Товары",
+        description: "Операции с автозапчастями"
+      }
+    ]
+  },
+  apis: ["./app/routes/*.js"]
 };
 
-app.use(cors(corsOptions));
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Простой маршрут
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to Auto Parts Shop API" });
+  res.json({ 
+    message: "AutoParts Trade API", 
+    docs: "/api-docs",
+    endpoints: ["/api/goods"]
+  });
 });
 
-// Подключение к базе данных
 const db = require("./app/models");
-db.sequelize.sync({ force: true })
+
+db.sequelize.authenticate()
   .then(() => {
-    console.log("Database synced successfully.");
+    console.log("Database connected successfully.");
+    
+    return db.sequelize.sync();
   })
-  .catch((err) => {
-    console.log("Failed to sync db: " + err.message);
+  .then(() => {
+    console.log("Database synchronized.");
+    
+    require("./app/routes/goods.routes")(app);
+    console.log("Routes loaded.");
+  })
+  .catch(err => {
+    console.error("Database error:", err.message);
   });
 
-// Подключаем маршруты
-require("./app/routes/goodsgroup.routes.js")(app);
-require("./app/routes/goods.routes.js")(app); 
-
-// Установка порта
-const PORT = process.env.NODE_DOCKER_PORT || 8080;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-  console.log(`API available at http://localhost:${PORT}/api/goodsgroups`);
+  console.log(`Server is running on port ${PORT}`);
+  console.log(`API Documentation: http://localhost:${PORT}/api-docs`);
 });

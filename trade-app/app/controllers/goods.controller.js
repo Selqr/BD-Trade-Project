@@ -1,165 +1,126 @@
 const db = require("../models");
-const Goods = db.goods;
-const Sequelize = db.Sequelize;
 
-exports.create = (req, res) => {
-  if (!req.body.name) {
-    res.status(400).send({
-      message: "Название товара не может быть пустым!"
-    });
-    return;
+// Создать товар
+exports.create = async (req, res) => {
+  try {
+    const goods = await db.goods.create(req.body);
+    res.json(goods);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  const goods = {
-    name: req.body.name,
-    code: req.body.code,
-    description: req.body.description,
-    price: req.body.price,
-    goods_group_id: req.body.goods_group_id
-  };
-
-  Goods.create(goods)
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: err.message || "Ошибка при создании товара."
-      });
-    });
 };
 
-exports.findAll = (req, res) => {
-  Goods.findAll()
-    .then(data => {
-      res.send(data);
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: err.message || "Ошибка при получении товаров."
-      });
+// Получить все товары
+exports.findAll = async (req, res) => {
+  try {
+    const goods = await db.goods.findAll({
+      include: [{
+        model: db.goodsGroup,
+        as: 'group'
+      }]
     });
+    res.json(goods);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
-exports.findOne = (req, res) => {
-  const id = req.params.id;
-
-  Goods.findByPk(id)
-    .then(data => {
-      if (data) {
-        res.send(data);
-      } else {
-        res.status(404).send({
-          message: `Товар с ID=${id} не найден.`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: `Ошибка при получении товара с ID=${id}`
-      });
+// Получить товар по ID
+exports.findOne = async (req, res) => {
+  try {
+    const goods = await db.goods.findByPk(req.params.id, {
+      include: [{
+        model: db.goodsGroup,
+        as: 'group'
+      }]
     });
-};
-
-exports.update = (req, res) => {
-  const id = req.params.id;
-
-  Goods.update(req.body, {
-    where: { id: id }
-  })
-    .then(num => {
-      if (num == 1) {
-        res.send({
-          message: "Товар успешно обновлен."
-        });
-      } else {
-        res.send({
-          message: `Невозможно обновить товар с ID=${id}.`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: `Ошибка при обновлении товара с ID=${id}`
-      });
-    });
-};
-
-exports.delete = (req, res) => {
-  const id = req.params.id;
-
-  Goods.destroy({
-    where: { id: id }
-  })
-    .then(num => {
-      if (num == 1) {
-        res.send({
-          message: "Товар успешно удален!"
-        });
-      } else {
-        res.send({
-          message: `Невозможно удалить товар с ID=${id}.`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: `Не удалось удалить товар с ID=${id}`
-      });
-    });
-};
-
-exports.getGoodsGroupName = (req, res) => {
-  const id = req.params.id;
-
-  db.sequelize.query(
-    `SELECT gg.name FROM goods_groups gg 
-     LEFT JOIN goods g ON gg.id = g.goods_group_id 
-     WHERE g.id = ${id}`,
-    {
-      type: Sequelize.QueryTypes.SELECT
+    
+    if (!goods) {
+      return res.status(404).json({ error: "Goods not found" });
     }
-  )
-    .then(data => {
-      if (data.length > 0) {
-        res.send(data[0]);
-      } else {
-        res.status(404).send({
-          message: `Товар с ID=${id} не найден или не имеет группы.`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: `Ошибка при получении названия группы для товара с ID=${id}`
-      });
-    });
+    
+    res.json(goods);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
-exports.getGoodsGroup = (req, res) => {
-  const id = req.params.id;
-
-  db.sequelize.query(
-    'SELECT gg.* FROM goods_groups gg LEFT JOIN goods g ON gg.id = g.goods_group_id WHERE g.id = :id',
-    {
-      replacements: { id: id },
-      type: Sequelize.QueryTypes.SELECT,
-      model: db.goodsGroup,
-      mapToModel: true
-    }
-  )
-    .then(data => {
-      if (data.length > 0) {
-        res.send(data[0]);
-      } else {
-        res.status(404).send({
-          message: `Товар с ID=${id} не найден или не имеет группы.`
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).send({
-        message: `Ошибка при получении группы для товара с ID=${id}`
-      });
+// Обновить товар
+exports.update = async (req, res) => {
+  try {
+    const [updated] = await db.goods.update(req.body, {
+      where: { id: req.params.id }
     });
+    
+    if (updated) {
+      const updatedGoods = await db.goods.findByPk(req.params.id);
+      res.json(updatedGoods);
+    } else {
+      res.status(404).json({ error: "Goods not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Удалить товар
+exports.delete = async (req, res) => {
+  try {
+    const deleted = await db.goods.destroy({
+      where: { id: req.params.id }
+    });
+    
+    if (deleted) {
+      res.json({ message: "Goods deleted successfully" });
+    } else {
+      res.status(404).json({ error: "Goods not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Получить название группы товара
+exports.getGoodsGroupName = async (req, res) => {
+  try {
+    const goods = await db.goods.findByPk(req.params.id, {
+      include: [{
+        model: db.goodsGroup,
+        as: 'group',
+        attributes: ['name']
+      }]
+    });
+    
+    if (!goods) {
+      return res.status(404).json({ error: "Goods not found" });
+    }
+    
+    res.json({ 
+      goodsId: goods.id,
+      goodsName: goods.name,
+      groupName: goods.group ? goods.group.name : null
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Получить полную информацию о группе товара
+exports.getGoodsGroup = async (req, res) => {
+  try {
+    const goods = await db.goods.findByPk(req.params.id, {
+      include: [{
+        model: db.goodsGroup,
+        as: 'group'
+      }]
+    });
+    
+    if (!goods) {
+      return res.status(404).json({ error: "Goods not found" });
+    }
+    
+    res.json(goods.group);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
